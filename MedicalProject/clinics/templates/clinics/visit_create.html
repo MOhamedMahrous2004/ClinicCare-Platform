@@ -1,0 +1,241 @@
+{% extends 'clinics/base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card card-modern p-4">
+        <div class="d-flex align-items-center mb-4">
+            <div class="icon-box bg-success bg-opacity-10 p-3 rounded-4 me-3">
+                <i class="fas fa-plus-circle fa-2x text-success"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold mb-0">إضافة زيارة جديدة</h4>
+                <p class="text-muted small">أدخل بيانات الزيارة الطبية</p>
+            </div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="row g-4">
+
+                <!-- المريض -->
+                <div class="col-md-6">
+                    <label class="fw-semibold form-label"><i class="fas fa-user-injured text-primary me-2"></i>المريض</label>
+                    {{ form.patient }}
+                </div>
+
+                <!-- العيادة الرئيسية -->
+                <div class="col-md-6">
+                    <label class="fw-semibold form-label"><i class="fas fa-clinic-medical text-primary me-2"></i>العيادة الرئيسية</label>
+                    {{ form.main_clinic }}
+                </div>
+
+                <!-- العيادة الفرعية -->
+                <div class="col-md-6">
+                    <label class="fw-semibold form-label"><i class="fas fa-clinic-medical text-warning me-2"></i>العيادة الفرعية</label>
+                    {{ form.sub_clinic }}
+                </div>
+
+                <!-- الطبيب -->
+                <div class="col-md-6">
+                    <label class="fw-semibold form-label"><i class="fas fa-user-md text-info me-2"></i>الطبيب</label>
+                    {{ form.doctor }}
+                </div>
+
+                <!-- التشخيص -->
+                <div class="col-md-12">
+                    <label class="fw-semibold form-label"><i class="fas fa-stethoscope text-danger me-2"></i>التشخيص</label>
+                    {{ form.analysis_results }}
+                </div>
+
+                <!-- الأدوية -->
+                <div class="col-md-12">
+                    <label class="fw-semibold form-label"><i class="fas fa-prescription-bottle text-success me-2"></i>الأدوية</label>
+                    {{ form.medicines }}
+                </div>
+
+                <!-- رفع الملفات (Drag & Drop) -->
+                <div class="col-md-12">
+                    <label class="fw-semibold form-label"><i class="fas fa-paperclip text-secondary me-2"></i>رفع ملفات</label>
+
+                    <div id="drop-area" class="border border-2 border-dashed p-5 text-center rounded-4 mt-1" style="cursor:pointer; background:#fafbfc; transition:0.3s;">
+                        <i class="fas fa-cloud-upload-alt fa-3x d-block mb-3 text-muted"></i>
+                        <p class="text-muted fw-semibold">اسحب الملفات هنا أو اضغط للاختيار</p>
+                        <input type="file" id="filesInput" name="files" multiple hidden>
+                        <button type="button" class="btn btn-primary rounded-pill px-4" onclick="document.getElementById('filesInput').click()">
+                            <i class="fas fa-folder-open me-2"></i> اختيار ملفات
+                        </button>
+                    </div>
+
+                    <!-- معاينة الملفات -->
+                    <div class="row mt-3 g-3" id="preview"></div>
+                </div>
+
+            </div>
+
+            <!-- الأزرار -->
+            <div class="mt-4 d-flex gap-3 flex-wrap">
+                <button type="submit" class="btn btn-success px-5">
+                    <i class="fas fa-save me-2"></i> حفظ الزيارة
+                </button>
+                <a href="{% url 'visit_list' %}" class="btn btn-secondary px-4">
+                    <i class="fas fa-arrow-right me-2"></i> رجوع إلى القائمة
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ================= ستايلات إضافية ================= -->
+<style>
+    #drop-area.dragover {
+        background: #e9f7ef !important;
+        border-color: #059669 !important;
+        border-style: solid !important;
+    }
+    #preview img, #preview .file-preview {
+        height: 150px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+    #preview .file-preview-pdf {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        height: 150px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        flex-direction: column;
+    }
+</style>
+
+<!-- ================= سكريبتات ================= -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ===== 1. تحميل العيادات الفرعية والدكاترة =====
+    const mainClinic = document.querySelector("[name='main_clinic']");
+    const subClinic = document.querySelector("[name='sub_clinic']");
+    const doctor = document.querySelector("[name='doctor']");
+
+    if (mainClinic) {
+        mainClinic.addEventListener("change", function () {
+            const mainId = this.value;
+            if (!mainId) {
+                subClinic.innerHTML = '<option value="">---------</option>';
+                doctor.innerHTML = '<option value="">---------</option>';
+                return;
+            }
+            fetch(`/clinics/load-sub-clinics/?main_id=${mainId}`)
+                .then(res => res.json())
+                .then(data => {
+                    subClinic.innerHTML = '<option value="">اختر عيادة فرعية</option>';
+                    data.forEach(item => {
+                        subClinic.innerHTML += `<option value="${item.id}">${item.name}</option>`;
+                    });
+                    doctor.innerHTML = '<option value="">اختر طبيب</option>';
+                })
+                .catch(() => {
+                    subClinic.innerHTML = '<option value="">حدث خطأ</option>';
+                });
+        });
+    }
+
+    if (subClinic) {
+        subClinic.addEventListener("change", function () {
+            const subId = this.value;
+            if (!subId) {
+                doctor.innerHTML = '<option value="">اختر طبيب</option>';
+                return;
+            }
+            fetch(`/clinics/load-doctors/?sub_id=${subId}`)
+                .then(res => res.json())
+                .then(data => {
+                    doctor.innerHTML = '<option value="">اختر طبيب</option>';
+                    if (data.length === 0) {
+                        doctor.innerHTML += `<option value="" disabled>لا يوجد دكاترة</option>`;
+                    } else {
+                        data.forEach(doc => {
+                            doctor.innerHTML += `<option value="${doc.id}">${doc.name}</option>`;
+                        });
+                    }
+                })
+                .catch(() => {
+                    doctor.innerHTML = '<option value="">حدث خطأ</option>';
+                });
+        });
+    }
+
+    // ===== 2. Drag & Drop =====
+    const dropArea = document.getElementById("drop-area");
+    const fileInput = document.getElementById("filesInput");
+    const preview = document.getElementById("preview");
+
+    if (dropArea && fileInput) {
+        // منع السلوك الافتراضي
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, e => e.preventDefault());
+        });
+
+        // تأثير السحب
+        dropArea.addEventListener('dragover', () => dropArea.classList.add('dragover'));
+        dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+        dropArea.addEventListener('drop', (e) => {
+            dropArea.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            previewFiles(fileInput.files);
+        });
+
+        // اختيار يدوي
+        fileInput.addEventListener('change', function () {
+            previewFiles(this.files);
+        });
+    }
+
+    // ===== 3. معاينة الملفات =====
+    function previewFiles(files) {
+        preview.innerHTML = '';
+        if (!files || files.length === 0) {
+            preview.innerHTML = '<p class="text-muted mt-2">لا توجد ملفات محددة</p>';
+            return;
+        }
+
+        Array.from(files).forEach(file => {
+            const col = document.createElement('div');
+            col.className = 'col-md-3 col-sm-6 mb-3';
+
+            if (file.type === 'application/pdf') {
+                col.innerHTML = `
+                    <div class="file-preview-pdf p-2 text-center">
+                        <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                        <p class="small text-truncate w-100 mt-2 mb-0">${file.name}</p>
+                    </div>
+                `;
+            } else if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    col.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded-3 shadow-sm">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                col.innerHTML = `
+                    <div class="file-preview-pdf p-2 text-center">
+                        <i class="fas fa-file fa-3x text-secondary"></i>
+                        <p class="small text-truncate w-100 mt-2 mb-0">${file.name}</p>
+                    </div>
+                `;
+            }
+            preview.appendChild(col);
+        });
+    }
+
+    // (اختياري) تنبيه إذا كان هناك ملفات محملة مسبقاً من السيرفر (في حالة التعديل)
+    // لكن هذه صفحة إضافة، لذا لا نحتاجها هنا.
+});
+</script>
+
+{% endblock %}

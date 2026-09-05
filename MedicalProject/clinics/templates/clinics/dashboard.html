@@ -1,0 +1,160 @@
+{% extends 'clinics/base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold"><i class="fas fa-chart-line text-primary me-2"></i> لوحة التحكم</h3>
+        <span class="badge bg-primary p-2 px-4 rounded-pill">👋 أهلاً يا {{ request.user.username }}</span>
+    </div>
+
+    <!-- 📊 STATS CARDS -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
+                <h6>👥 المرضى</h6>
+                <h2>{{ patients_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-success">
+                <div class="stat-icon"><i class="fas fa-notes-medical"></i></div>
+                <h6>📋 الزيارات</h6>
+                <h2>{{ visits_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-warning">
+                <div class="stat-icon"><i class="fas fa-clinic-medical"></i></div>
+                <h6>🏥 العيادات</h6>
+                <h2>{{ clinics_count }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-danger">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                <h6>📅 الحجوزات</h6>
+                <h2>{{ appointments_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📈 CHARTS ROW -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card card-modern p-3">
+                <h6 class="fw-bold text-primary"><i class="fas fa-chart-line me-2"></i> عدد الزيارات شهريًا</h6>
+                <canvas id="visitsChart" height="200"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card card-modern p-3">
+                <h6 class="fw-bold text-danger"><i class="fas fa-calendar-alt me-2"></i> عدد الحجوزات شهريًا</h6>
+                <canvas id="appointmentsChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <div class="col-md-6">
+            <div class="card card-modern p-3">
+                <h6 class="fw-bold text-success"><i class="fas fa-chart-bar me-2"></i> أكثر العيادات استخدامًا</h6>
+                <canvas id="clinicChart" height="200"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card card-modern p-3">
+                <h6 class="fw-bold text-info"><i class="fas fa-user-md me-2"></i> زيارات لكل دكتور</h6>
+                <canvas id="doctorChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👥 توزيع المرضى -->
+    <div class="row mt-4">
+        <div class="col-md-6 mx-auto">
+            <div class="card card-modern p-4 text-center">
+                <h6 class="fw-bold text-warning"><i class="fas fa-venus-mars me-2"></i> توزيع المرضى حسب النوع</h6>
+                <canvas id="patientChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 📈 Visits
+    new Chart(document.getElementById('visitsChart'), {
+        type: 'line',
+        data: {
+            labels: {{ months|safe }},
+            datasets: [{
+                label: 'الزيارات',
+                data: {{ counts|safe }},
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.05)',
+                tension: 0.3,
+                fill: true
+            }]
+        }
+    });
+
+    // 📅 Appointments
+    new Chart(document.getElementById('appointmentsChart'), {
+        type: 'line',
+        data: {
+            labels: {{ appointments_months|safe }},
+            datasets: [{
+                label: 'الحجوزات',
+                data: {{ appointments_counts|safe }},
+                borderColor: '#dc2626',
+                backgroundColor: 'rgba(220, 38, 38, 0.05)',
+                tension: 0.3,
+                fill: true
+            }]
+        }
+    });
+
+    // 🏥 Clinics
+    new Chart(document.getElementById('clinicChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ clinic_names|safe }},
+            datasets: [{
+                label: 'عدد الزيارات',
+                data: {{ clinic_counts|safe }},
+                backgroundColor: '#059669'
+            }]
+        }
+    });
+
+    // 👨‍⚕️ Doctors
+    new Chart(document.getElementById('doctorChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ doctor_names|safe }},
+            datasets: [{
+                label: 'عدد الزيارات',
+                data: {{ doctor_counts|safe }},
+                backgroundColor: '#4f46e5'
+            }]
+        }
+    });
+
+    // 👥 Patients Gender
+    new Chart(document.getElementById('patientChart'), {
+        type: 'pie',
+        data: {
+            labels: {{ gender_labels|safe }},
+            datasets: [{
+                data: {{ gender_counts|safe }},
+                backgroundColor: ['#4f46e5', '#f43f5e', '#f59e0b']
+            }]
+        }
+    });
+</script>
+
+{% endblock %}

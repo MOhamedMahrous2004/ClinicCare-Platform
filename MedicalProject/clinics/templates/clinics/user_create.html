@@ -1,0 +1,77 @@
+{% extends 'clinics/base.html' %}
+{% block content %}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="col-md-8 col-lg-6">
+    <div class="card card-modern p-4">
+
+      <div class="text-center mb-4">
+        <div class="icon-box bg-primary bg-opacity-10 d-inline-block p-3 rounded-4 mb-3">
+          <i class="fas fa-user-plus fa-3x text-primary"></i>
+        </div>
+        <h4 class="fw-bold">{% if is_edit %}✏️ تعديل مستخدم{% else %}➕ إضافة مستخدم{% endif %}</h4>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold"><i class="fas fa-user me-2"></i>اسم المستخدم</label>
+          {{ form.name }}
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold"><i class="fas fa-calendar-alt me-2"></i>العمر</label>
+            {{ form.age }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold"><i class="fas fa-venus-mars me-2"></i>النوع</label>
+            {{ form.gender }}
+          </div>
+        </div>
+        <div class="mb-3 mt-3">
+          <label class="form-label fw-semibold"><i class="fas fa-phone me-2"></i>رقم الهاتف</label>
+          {{ form.phone }}
+        </div>
+        <div class="form-check form-switch mb-3">
+          {{ form.has_chronic }}
+          <label class="form-check-label fw-semibold me-2">هل يعاني من مرض مزمن؟</label>
+        </div>
+        <div class="mb-3" id="chronic_field">
+          <label class="form-label fw-semibold"><i class="fas fa-heartbeat me-2"></i>المرض المزمن</label>
+          {{ form.chronic_diseases }}
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'patients_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> رجوع
+          </a>
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save me-1"></i> حفظ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const checkbox = document.querySelector("#id_has_chronic");
+    const field = document.querySelector("#chronic_field");
+    const input = document.querySelector("#id_chronic_diseases");
+
+    function toggleField() {
+        if (checkbox && checkbox.checked) {
+            field.style.display = "block";
+            if (input) input.required = true;
+        } else {
+            field.style.display = "none";
+            if (input) { input.required = false; input.value = ""; }
+        }
+    }
+    if (checkbox) checkbox.addEventListener("change", toggleField);
+    toggleField();
+});
+</script>
+
+{% endblock %}

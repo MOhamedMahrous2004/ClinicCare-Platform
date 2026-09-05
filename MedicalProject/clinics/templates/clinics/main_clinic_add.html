@@ -1,0 +1,16 @@
+{% extends 'clinics/base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow p-4">
+    <h4 class="text-success mb-3"><i class="fa fa-plus"></i> إضافة عيادة رئيسية</h4>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="mt-3">
+        <button type="submit" class="btn btn-success">حفظ</button>
+        <a href="{% url 'clinics_list' %}" class="btn btn-secondary">رجوع</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

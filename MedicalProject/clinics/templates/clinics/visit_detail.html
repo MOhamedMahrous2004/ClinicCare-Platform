@@ -1,0 +1,95 @@
+{% extends 'clinics/base.html' %}
+{% block title %}تفاصيل الزيارة{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card card-modern p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold"><i class="fas fa-file-medical text-primary me-2"></i> تفاصيل الزيارة #{{ visit.id }}</h4>
+            <a href="{% url 'visit_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-right"></i> رجوع</a>
+        </div>
+        <hr>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-4">
+                    <h6 class="fw-bold text-secondary"><i class="fas fa-user-md me-2"></i>الطبيب</h6>
+                    <p class="fs-5 fw-semibold">{{ visit.doctor.name|default:"غير محدد" }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-4">
+                    <h6 class="fw-bold text-secondary"><i class="fas fa-user-injured me-2"></i>المريض</h6>
+                    <p class="fs-5 fw-semibold">{{ visit.patient.name }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-4">
+                    <h6 class="fw-bold text-secondary"><i class="fas fa-clinic-medical me-2"></i>العيادة الرئيسية</h6>
+                    <p>{{ visit.main_clinic.name|default:"غير محددة" }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-4">
+                    <h6 class="fw-bold text-secondary"><i class="fas fa-clinic-medical me-2"></i>العيادة الفرعية</h6>
+                    <p>{{ visit.sub_clinic.name|default:"غير محددة" }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-4">
+                    <h6 class="fw-bold text-secondary"><i class="fas fa-stethoscope me-2"></i>التشخيص</h6>
+                    <p class="fw-semibold">{{ visit.analysis_results|default:"لا توجد بيانات" }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-4">
+                    <h6 class="fw-bold text-secondary"><i class="fas fa-prescription-bottle me-2"></i>الأدوية</h6>
+                    <p class="fw-semibold">{{ visit.medicines|default:"لا توجد بيانات" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files -->
+        <div class="mt-4">
+            <h6 class="fw-bold text-secondary"><i class="fas fa-paperclip me-2"></i>الملفات المرفقة</h6>
+            <div class="row g-3 mt-2">
+                {% if visit.files.exists %}
+                    {% for file in visit.files.all %}
+                        <div class="col-md-3 text-center position-relative">
+                            {% if file.file.url|lower|slice:"-4:" == ".pdf" %}
+                                <a href="{{ file.file.url }}" target="_blank" class="text-decoration-none">
+                                    <div class="p-3 border rounded-4 bg-light">
+                                        <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                        <p class="small text-muted mt-2 mb-0">PDF</p>
+                                    </div>
+                                </a>
+                            {% else %}
+                                <a href="{{ file.file.url }}" target="_blank" class="glightbox">
+                                    <img src="{{ file.file.url }}" class="img-fluid rounded-4 shadow-sm" style="max-height:150px; width:100%; object-fit:cover;">
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'delete_file' file.id %}" class="btn btn-danger btn-sm position-absolute top-0 start-0 m-2" onclick="return confirm('حذف الملف؟')"><i class="fas fa-times"></i></a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted"><i class="fas fa-info-circle me-2"></i>لا يوجد ملفات مرفقة</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-4 d-flex gap-2 flex-wrap">
+            <a href="{% url 'visit_pdf' visit.id %}" class="btn btn-danger"><i class="fas fa-file-pdf me-1"></i> تحميل PDF</a>
+            <a href="{% url 'visit_edit' visit.id %}" class="btn btn-warning"><i class="fas fa-edit me-1"></i> تعديل</a>
+            <a href="{% url 'visit_delete' visit.id %}" class="btn btn-danger" onclick="return confirm('هل أنت متأكد؟')"><i class="fas fa-trash me-1"></i> حذف</a>
+        </div>
+
+        <div class="text-muted text-end mt-4"><small><i class="fas fa-calendar-alt me-2"></i>{{ visit.date|date:"Y-m-d H:i" }}</small></div>
+    </div>
+</div>
+
+<!-- GLightbox -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<script>const lightbox = GLightbox({ selector: '.glightbox' });</script>
+{% endblock %}

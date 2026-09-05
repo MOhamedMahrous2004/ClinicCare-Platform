@@ -1,0 +1,63 @@
+{% extends 'clinics/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold"><i class="fas fa-user-md text-primary me-2"></i> قائمة الدكاترة</h3>
+        <a href="{% url 'doctor_create' %}" class="btn btn-success"><i class="fas fa-plus-circle me-1"></i> إضافة دكتور</a>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="🔍 ابحث عن دكتور..." value="{{ request.GET.search }}">
+        </div>
+        <div class="col-md-3">
+            <select name="main_clinic" class="form-select">
+                <option value="">كل العيادات</option>
+                {% for clinic in main_clinics %}
+                    <option value="{{ clinic.id }}" {% if request.GET.main_clinic == clinic.id|stringformat:"s" %}selected{% endif %}>{{ clinic.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="sub_clinic" class="form-select">
+                <option value="">كل التخصصات</option>
+                {% for sub in sub_clinics %}
+                    <option value="{{ sub.id }}" {% if request.GET.sub_clinic == sub.id|stringformat:"s" %}selected{% endif %}>{{ sub.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i> فلترة</button>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="table-modern">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr><th>اسم الدكتور</th><th>العيادة الفرعية</th><th>أيام العمل</th><th>ساعات العمل</th><th class="text-center">الإجراءات</th></tr>
+            </thead>
+            <tbody>
+                {% for doc in doctors %}
+                <tr>
+                    <td><span class="fw-semibold">{{ doc.name }}</span></td>
+                    <td>{{ doc.sub_clinic.name }}</td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ doc.working_days|default:"-" }}</span></td>
+                    <td>{{ doc.working_hours|default:"-" }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'doctor_edit' doc.id %}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                        <form method="post" action="{% url 'doctor_delete' doc.id %}" style="display:inline;" onsubmit="return confirm('هل أنت متأكد؟')">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-4 text-muted"><i class="fas fa-inbox me-2"></i>لا يوجد دكاترة</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
